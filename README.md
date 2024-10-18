@@ -1,5 +1,5 @@
 Algoritmos para Métodos Algorítmicos en matemáticas
 
-Usalos bien puto inutil
+Usalos bien puto inútil
 
-By Marcos y Guillermo Hernando Villar
+By mahernvi and guhernv
