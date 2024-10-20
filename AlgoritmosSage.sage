@@ -35,76 +35,133 @@ def diagonal_inferior(val,size,field):
     return m
 
 def LU_dolittle(a):
+    """Ayuda:
+    Parametros:
+        Matriz
+    
+    Devuelve:
+        | Matrices P, L, U
+        | P*A == L*U
+    """
     p,l,u = A.LU()
-    return [p,l,u]
+    return ~p,l,u
     
 def LU_crout(a):
+    """Ayuda:
+    Parametros:
+        Matriz
+    
+    Devuelve:
+        | Matrices P, L, U
+        | P*A == L*U
+    """
     size = a.nrows()
-    p,l,u = A.LU()
+    p,l,u = LU_dolittle(A)
     aux = []
     for i in range (size):
         aux.append(u[i,i])
     d = diagonal_matrix(aux)    
     l = l*d
     u = ~d*u
-    return [p,l,u]
+    return p,l,u
 
-def jacobi(a):
-    size = a.nrows()
-    e = []
-    f = []
-    d = []
+def separar_matriz(a):
+    """Ayuda:
+    Parametros:
+        Matriz
     
+    Devuelve:
+        | D = diagonal de A
+        | E = triangular inferio A
+        | F = triangular superior A
+    """
+    if not a.is_square():
+        raise ValueError("La matriz no es cuadrada")
+    size = a.nrows()
+    daux = []
     for i in range(size):
-        d.append(a[i,i])
-        
-    m = diagonal_matrix(d)
-    aux = a-m
+        daux.append(a[i,i])
+    d = diagonal_matrix(daux)
+    eaux = []
+    faux = []
+    aux = a - d
     for i in range(size):
         for j in range(size):
             if i<=j:
-                e.append(-aux[i,j])
-                
+                faux.append(-aux[i,j])
     for i in range(size):
         for j in range(size):
             if i>=j:
-                f.append(-aux[i,j])
-                
-    n = upper_triangular_matrix(size,e,SR) + lower_triangular_matrix(size,f,SR)
+                eaux.append(-aux[i,j])
+    e = lower_triangular_matrix(size,eaux,SR)
+    f = upper_triangular_matrix(size,faux,SR)
+    return d, e, f
+
+def jacobi(a):
+    """Ayuda:
+    Parametros: 
+        Matriz
     
+    Devuelve:
+        Matriz de jacobi
+    """
+    d,e,f = separar_matriz(a)
+    m = d
+    n = e+f
     j = ~m*(n)
     
     return  j
 
 def gauss_seidel(a):
-    size = a.nrows()
-    e = []
-    f = []
-    d = []
+    """Ayuda:
+    Parametros: 
+        Matriz
     
-    for i in range(size):
-        d.append(a[i,i])
-        
-    daux = diagonal_matrix(d)
-    aux = a-daux
-    for i in range(size):
-        for j in range(size):
-            if i<=j:
-                e.append(-aux[i,j])
-                
-    for i in range(size):
-        for j in range(size):
-            if i>=j:
-                f.append(aux[i,j])
-    
-    n = upper_triangular_matrix(size,e,SR)
-    m = daux + lower_triangular_matrix(size,f,SR)
-    
+    Devuelve:
+        Matriz de Gauss-Seidel
+    """
+    d,e,f = separar_matriz(a)
+    m = (d-e)
+    n = f
     l = ~m*n
     
     return l
 
+def SOR(a,w):
+    """Ayuda:
+    Parametros: 
+        | Matriz, parametro w
+        | w = 1 es Gauss-Seidel
+    
+    Devuelve:
+        Matriz SOR en funcion de w
+    """
+    d,e,f = separar_matriz(a)
+    m = d -w*e
+    n = (1-w)*d + w*f
+    l = ~m*n
+    
+    return l
+
+def valor_optimo_SOR(a):
+    """Ayuda:
+    Parametros:
+        Matriz
+    Devuelve:
+        Valor optimo de w
+    """
+    l = gauss_seidel(a)
+    k = radio_espectral(l)
+    return 2/(1+sqrt(1-k))
+
 def radio_espectral(a):
+    """Ayuda:
+    Parametros:
+        | Matriz
+    
+    Devuelve:
+        Radio espectral de la matriz
+    """
     size = a.nrows()
     vaps = a.eigenvalues()
     absVaps = []
@@ -122,59 +179,86 @@ def vector_nulo (size):
     
     return vector(v)
 
-def sol_jacobi(a,b):
+def sol_jacobi(a,b,iteraciones):
+    """Ayuda:
+    Parametros:
+        Matriz A, vector b, num iteraciones
+        
+    Devuelve:
+        | Solución aproximada mediante jacobi
+        | Si el radio espectral es mayor que uno
+        | no lo hace
+    """
     size = a.nrows()
     j = jacobi(a)
-    if radio_espectral(j) < 1:
-        daux = []
-        for i in range(size):
-            daux.append(a[i,i])
-        d = ~diagonal_matrix(daux)
-        v = vector_nulo(size)
-        for i in range(100):
-            v = j*v+d*b
-        return N(v)
-    else:
+    if radio_espectral(j) > 1:
         print("Radio espectral mayor que uno")
+    else:
+        d,e,f = separar_matriz(a)
+        v = vector_nulo(size)
+        for i in range(iteraciones):
+            v = j*v + ~d*b
+        return N(v)
 
-def sol_gauss_seidel(a,b):
+def sol_gauss_seidel(a,b,iteraciones):
+    """Ayuda:
+    Parametros:
+        Matriz A, vector b, num iteraciones
+        
+    Devuelve:
+        | Solución aproximada mediante gauss_seidel
+        | Si el radio espectral es mayor que uno
+        | no lo hace
+    """
     size = a.nrows()
     l = gauss_seidel(a)
-    if radio_espectral(l) < 1:
-        e = []
-        f = []
-        d = []
-    
-        for i in range(size):
-            d.append(a[i,i])
-        
-        daux = diagonal_matrix(d)
-        aux = a-daux
-        for i in range(size):
-            for j in range(size):
-                if i<=j:
-                    e.append(-aux[i,j])
-                
-        for i in range(size):
-            for j in range(size):
-                if i>=j:
-                    f.append(aux[i,j])
-    
-        n = upper_triangular_matrix(size,e,SR)
-        m = daux + lower_triangular_matrix(size,f,SR)
-        
-        v = vector_nulo(size)
-        for i in range(100):
-            v = l*v+~m*b
-        return N(v)
+    if radio_espectral(l) > 1:
+        print("Radio espectral mayor que uno")   
     else:
-        print("Radio espectral mayor que uno")        
+        d,e,f = separar_matriz(a)
+        v = vector_nulo(size)
+        for i in range(iteraciones):
+            v = l*v + ~(d-e)*b
+        return N(v)
+             
+def sol_SOR(a,b,w,iteraciones):
+    """Ayuda:
+    Parametros:
+        Matriz A, vector b, parametro w, num iteraciones
+        
+    Devuelve:
+        | Solución aproximada mediante SOR
+        | Si el radio espectral es mayor que uno
+        | no lo hace
+    """
+    size = a.nrows()
+    l = SOR(a,w)
+    if radio_espectral(l) > 1:
+        print("Radio espectral mayor que uno") 
+    else:
+        d,e,f = separar_matriz(a)
+        v = vector_nulo(size)
+        for i in range (iteraciones):
+            v = l*v+~(d-w*e)*b
+        return N(v)
 
 
-def f(x): #la funcion la cual se quiere evaluar
-    return N(x*sin(x) -1)
-
-def biseccion(a,b):
+def biseccion(f,a,b):
+    """Ayuda:
+       
+    Parametros:
+        Necesitas declararte una función f(x)
+        
+        Ejemplo:
+        
+        | f(x) = x*sin(x) -1 
+        
+    Devuelve:
+        | Una lista con el intervalo nuevo (a,b)
+        | el valor de la solución y el nº de iteraciones
+        
+    """
+    
     if f(a)>0 and f(b)<0 or f(a)<0 and f(b)>0:
         print("El intervalo sirve: ")
         EPSILON = 0.0001
@@ -193,11 +277,26 @@ def biseccion(a,b):
                     b = N(m)
                 m = N((a+b)/2)
                 i = i+1
-        return [a,b,m,i]
+        return [(a,b),m,i]
     else:
         print("El intervalo no sirve")
         
-def regula_falsi(a,b):
+def regula_falsi(f,a,b):
+    """Ayuda:
+       
+    Parametros:
+        Necesitas declararte una función f(x)
+        
+        Ejemplo:
+        
+        | f(x) = x*sin(x) -1  
+        
+    Devuelve:
+        | Una lista con el intervalo nuevo (a,b)
+        | el valor de la solución y el nº de iteraciones
+        
+    """
+    
     if f(a)>0 and f(b)<0 or f(a)<0 and f(b)>0:
         print("El intervalo sirve: ")
         EPSILON = 0.0001
@@ -216,6 +315,6 @@ def regula_falsi(a,b):
                     b = N(m)
                 m = N((a*f(b)-b*f(a))/(f(b)-f(a)))
                 i = i+1
-        return [a,b,m,i]
+        return [(a,b),m,i]
     else:
         print("El intervalo no sirve")
