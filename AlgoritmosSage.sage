@@ -37,26 +37,26 @@ def diagonal_inferior(val,size,field):
 def LU_dolittle(a):
     """Ayuda:
     Parametros:
-        Matriz, sin especificar anillo
+        Matriz
     
     Devuelve:
         | Matrices P, L, U
         | P*A == L*U
     """
-    p,l,u = A.LU()
+    p,l,u = a.LU()
     return ~p,l,u
     
 def LU_crout(a):
     """Ayuda:
     Parametros:
-        Matriz, sin especificar anillo
+        Matriz
     
     Devuelve:
         | Matrices P, L, U
         | P*A == L*U
     """
     size = a.nrows()
-    p,l,u = LU_dolittle(A)
+    p,l,u = LU_dolittle(a)
     aux = []
     for i in range (size):
         aux.append(u[i,i])
