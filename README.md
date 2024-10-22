@@ -2,4 +2,4 @@ Algoritmos para Métodos Algorítmicos en matemáticas
 
 Usalos bien puto inútil
 
-By mahernvi and guhernv
+By mahernvi, guhernv and mameris
