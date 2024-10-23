@@ -34,6 +34,16 @@ def diagonal_inferior(val,size,field):
             i = i+1
     return m
 
+def num_cond (a,n):
+    """Ayuda:
+    Parametros: matriz A, numero de norma 1,2, oo; n
+    
+    Devuelve A.nomr(n)*(~A).norm(n)
+    """
+    v1 = a.norm(n)
+    v2 = (~a).norm(n)
+    return v1*v2
+
 def LU_dolittle(a):
     """Ayuda:
     Parametros:
@@ -318,3 +328,41 @@ def regula_falsi(f,a,b):
         return [(a,b),m,i]
     else:
         print("El intervalo no sirve")
+        
+def es_contractiva (g,a,b):
+    """Ayuda:
+    Parametros: funcion g, extremo a, extremo b
+    Ejemplo:
+    | g(x) = cos(x), intervalo [a,b]
+    | es_contractiva(g,0,1)
+    Devuelve:
+    | Si los extremos estan en el intervalo devuelve un dibujo
+    | Si los extremos no estan en el intervalo no devuelve nada
+    """
+    c = RealSet([a,b])
+    if g(a) in c and g(b) in c:
+        print("Los extremos estan en el intervalo")
+        fa(x) = g(a)
+        fb(x) = g(b)
+        Gf=plot(g(x),x,a,b)
+        Ga = plot(fa(x),x,a,b,color = 'red')
+        Gb = plot(fb(x),x,a,b,color = 'red')
+        show(Gf+Ga+Gb)
+        
+    else:
+        print("Los extremos no estan en el intervalo")
+        
+def posible_puntofijo (g,p):
+    """Ayuda:
+    Paramteros: funcion g, punto p
+    Ejemplo:
+    | g(x) = g(x) = 1+x-x^2/4
+    | posible_puntofijo(g,2)
+    Devuelve:
+    | p atractor o repulsor
+    """
+    dg(x) = diff(g(x),x)
+    if abs(dg(p)) < 1:
+        print(p); print( "punto fijo atractor")
+    else:
+        print(p); print( "punto fijo repulsor")
